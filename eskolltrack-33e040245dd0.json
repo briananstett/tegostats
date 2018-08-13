@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "eskolltrack",
+  "private_key_id": "33e040245dd09eba38f106c5a55e7aa26dd80abd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCxRBxeCO3xIuqX\nxdjFCsSE7s71XtDUib0uLXk3iZqIvuwBkI7ABbbdyyr0OhJG8JSj2+5eayO4L+kU\nrpWD2SsBa3k2FVUFthbGTUA1m/aKBs8azs4C9GqJnXxC2Vm0RU96xwH+YJFS2zAF\n7K/2Dk+2AeetIdAb0X+peZ4hmX5QMZT7zWAQNhQ+/psQGqxUUncbny/gwsFclgAV\nNvihTNWKr2iSCr5WBtd7fJVEiJGjY4OiZHcdfVf2v7r0W9HC5P4t38JQh7ZLq2K2\npdR9D6Xt/dRHW7+IZBs1bVWuDOTrbINeoxj8daymiTFL2lWNLes3rR/K2rxtOEqh\n60s7dDExAgMBAAECggEACXTArqN7Tem26fG75ob0hMLYd25fZXcTiGsUlEna3ICS\nxmKXutaTMrGr0OtoHjCnPTZ2OMMuXJzxqhDGGQp0qNa62I+6wVs9S8bDLhjrxeEn\nGx79DltLc5vbDRXbGyq3Wq1TBebQ2cKnhSljGZUZ23OukCXFnDZIwRmjvdcaTdzA\ncyPHQgglz3yM/rcCLrrU+1Eaemv+cDfe4VTju/Kvy1OyojO/hs/ftYDTCs0DwSib\n9eSC3Vw9q4vr2RlP0yuFBRXkyTVbZdywpNWTO+7QDTEhuyPvD3zNyWF7cTRUCcVx\ndgtxfX48vc7NYF942dUWC0v+mHuxSPwM28/k5i2FoQKBgQDloK08OFMB1wfO/RAF\n90k7B83xm4r7oblg16EfZao6eDmHvzIVJ2ji4lPOsAnUZ01E8ZBb1w+om8JJGaDm\nyUlKdleHZGClNYFD8Q5u3CxU65N2rxheYrtFoORM6hz1IS5pjdK09lnNvqopnjDx\nVxkLOkK0195FEDnPGkA2haj7PwKBgQDFn/EZdYOYlXwIwn39OrEXTonvg20EsHDm\nCSwICV72mrLzuTBn+C4scUj0mAF7K/NOngxKAMhDlN5w5qeEtyqgVz7d2BP7wvkF\neGUDGgBQt1hIx0yXYIsoUAx9JTLr1BfJTdGYravRIsddRHI8R86WJkX1dXRtpdR2\nRImjNCbnjwKBgBS7Xgiq2Su4W1cf1/uB6RWwTbK7pV+0qUUKEtz/08+1nRQZeg8Y\n4MpjPsfRcwG/VeWcnbj9AMfrUC5DZxiPIdPcPWjW8jbYTtRwhioSLNp57nVvt5aF\n+Xx+2z3qgTTMiyEykcyO1WrTBQ/+3VJc18EAwJcNSl8X6PA+4X9KsAgHAoGAG3xq\nUQsqGV+5F5LNaRnvpXkz8A8Ma5mKqkPeTuPWxF+xwfogxGUdLus2pWY61oG/XlDX\nDrfbIqMi6Pr7k5bSI+jegoZaCSsN7XfYPL0yDAfkDINDoM45rIqtof45fdlK0aG0\nJBMLkZPPvKYXaVDnZ7S9CC2k2tc0nJpdtkg7nPsCgYAH8E4C9KJETG13xXLn76/i\nvSbLOBG38HZv4V3VoLstPPrvqAnpa/GEiOlJHQ3ZN+CYmgQl4W3PhQVyMNn4wh+X\nxbMZgSvdB2F+wfqKX28IYad8UNF7eEq/X1g7G34WBbS9k/E5eGaSt9tR+Cb32wDX\nMareTTzyPqFMLFU12ZzM2A==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firestore@eskolltrack.iam.gserviceaccount.com",
+  "client_id": "100952749817572842181",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firestore%40eskolltrack.iam.gserviceaccount.com"
+}
