@@ -3,8 +3,9 @@ var kue= require('kue'),
 
 
 var job = que.create('csgo',{
-    // steamID: "76561198037475921",
-    steamID: '76561198099273779',
+    // steamID: "76561198037475921", //brian
+    //  steamID: '76561198099273779', // chris
+    steamID:"76561198008475539", //mitchell
     userID: '881a812d-b23a-4cb7-9e5e-c1873da6c1f9'
 }).removeOnComplete(true).save(error=>{
     if(error) console.log(error);

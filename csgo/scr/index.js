@@ -1,7 +1,7 @@
 /**
  * @description 
  * TeGo stat worker for Counter Strike Global Offensive. Listens on que 'csgo' for
- * messages requests.Each request make a REST api call to Steam for CSGO stats, parses them,
+ * message requests.Each request makes a REST api call to Steam for CSGO stats, parses them,
  * and updates the user's information in CloudStore.
  * 
  * @author Brian Anstett
@@ -9,6 +9,7 @@
 const kue = require('kue');
 const queue = kue.createQueue();
 const rp = require('request-promise');
+const fs = require('fs');
 
 //Configuration
 const configuration = require('./config.json');
@@ -32,6 +33,7 @@ function parser(rawStats){
         headShots(stats, savedStats);
         winRate(stats, savedStats);
         killDeath(stats,savedStats)
+        misStats(stats,savedStats);
         return resolve(savedStats);
         //TODO(Developer) Please find a better way to do this
     })
@@ -47,7 +49,7 @@ function accuracy(stats, save){
     let shotsFired = stats.total_shots_fired.value;
     let shotsHit = stats.total_shots_hit.value;
 
-    let accuracy = Math.floor((shotsHit / shotsFired) *100 );
+    let accuracy = ((shotsHit / shotsFired)* 100).toPrecision(3);
     
     save.accuracyPercent = accuracy;
 }
@@ -58,10 +60,10 @@ function accuracy(stats, save){
  * @param {object} save JSON object to pusha saved status
  */
 function headShots(stats, save){
-    let shotshit = stats.total_shots_hit.value;
+    let shotshit = stats.total_kills.value;
     let headshots = stats.total_kills_headshot.value;
 
-    let headshotPercent = Math.floor((headshots/shotshit) * 100);
+    let headshotPercent =((headshots/shotshit) * 100).toPrecision(3);
     
     save.headshotPercent = headshotPercent;
 }
@@ -76,7 +78,7 @@ function winRate(stats, save){
     let wins = stats.total_wins.value;
     let totalRounds = stats.total_rounds_played.value;
 
-    let winRate = Math.floor((wins/totalRounds) * 100);
+    let winRate = ((wins/totalRounds) * 100).toPrecision(3);
     save.winRate = winRate;
 }
 
@@ -90,8 +92,29 @@ function killDeath(stats, save){
     let kills = stats.total_kills.value;
     let deaths = stats.total_deaths.value;
 
-    let kdRatio = Math.floor((kills/deaths) * 100);
+    let kdRatio = ((kills/deaths)).toPrecision(2);
     save.kdRatio = kdRatio;
+}
+
+/**
+ * One offs stats. 
+ * @param {object} stats JSON object of raw stats.
+ * @param {object} save JSON object to push save status
+ * @description Add single one-off stats
+ */
+function misStats(stats, save){
+    let bombPlanted = stats.total_planted_bombs.value;
+    let bombDefused = stats.total_defused_bombs.value;
+    let timePlayed = Math.floor(stats.total_time_played.value /3600);
+    let averageDMG = Math.floor(stats.total_damage_done.value/stats.total_rounds_played.value);
+    let pistolWin = ((stats.total_wins_pistolround.value/(stats.total_matches_played.value * 2))*100).toPrecision(3);
+
+    save.bombPlanted = bombPlanted;
+    save.bombDefused = bombDefused;
+    save.timePlayed = timePlayed;
+    save.averageDMGHP = averageDMG;
+    save.pistolWin = pistolWin;
+
 }
 
 
@@ -102,13 +125,14 @@ queue.process('csgo', concurrency, function(message, done){
     rp({
         uri: requestURI
     }).then((csgoStats=>{
-        // console.log(csgoStats)
+        // let fs = require('fs');
         parser(csgoStats)
             .then(savedStates=>{
                 //update cloud store
                 console.log(savedStates);
                 done();
             }).catch(error=>{
+                console.log(error);
                 done(error);
             });
     })).catch(error=>{
