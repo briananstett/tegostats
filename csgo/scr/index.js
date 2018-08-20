@@ -9,11 +9,8 @@
 const kue = require('kue');
 const queue = kue.createQueue();
 const rp = require('request-promise');
-<<<<<<< HEAD
 const fs = require('fs');
-=======
 const async = require('async');
->>>>>>> 976aa6242a8ea92f6ea699ec1b538df8b301c898
 
 //Configuration
 const configuration = require('./config.json');
@@ -32,7 +29,7 @@ function parser(rawStats){
         let savedStats = {};
         var stats = JSON.parse(rawStats).playerstats.stats;
         
-        async.each([accuracy, headShots, winRate, killDeath], (getStat,callback)=>{
+        async.each([accuracy, headShots, winRate, killDeath, misStats], (getStat,callback)=>{
             getStat(stats,savedStats);
             callback();
         })
