@@ -9,7 +9,11 @@
 const kue = require('kue');
 const queue = kue.createQueue();
 const rp = require('request-promise');
+<<<<<<< HEAD
 const fs = require('fs');
+=======
+const async = require('async');
+>>>>>>> 976aa6242a8ea92f6ea699ec1b538df8b301c898
 
 //Configuration
 const configuration = require('./config.json');
@@ -28,12 +32,14 @@ function parser(rawStats){
         let savedStats = {};
         var stats = JSON.parse(rawStats).playerstats.stats;
         
-
-        accuracy(stats, savedStats);
-        headShots(stats, savedStats);
-        winRate(stats, savedStats);
-        killDeath(stats,savedStats)
-        misStats(stats,savedStats);
+        async.each([accuracy, headShots, winRate, killDeath], (getStat,callback)=>{
+            getStat(stats,savedStats);
+            callback();
+        })
+        // accuracy(stats, savedStats);
+        // headShots(stats, savedStats);
+        // winRate(stats, savedStats);
+        // killDeath(stats,savedStats)
         return resolve(savedStats);
         //TODO(Developer) Please find a better way to do this
     })
@@ -115,7 +121,7 @@ function misStats(stats, save){
     save.averageDMGHP = averageDMG;
     save.pistolWin = pistolWin;
 
-    
+
 }
 
 
