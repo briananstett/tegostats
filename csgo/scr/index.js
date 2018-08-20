@@ -9,6 +9,7 @@
 const kue = require('kue');
 const queue = kue.createQueue();
 const rp = require('request-promise');
+const async = require('async');
 
 //Configuration
 const configuration = require('./config.json');
@@ -27,11 +28,14 @@ function parser(rawStats){
         let savedStats = {};
         var stats = JSON.parse(rawStats).playerstats.stats;
         
-
-        accuracy(stats, savedStats);
-        headShots(stats, savedStats);
-        winRate(stats, savedStats);
-        killDeath(stats,savedStats)
+        async.each([accuracy, headShots, winRate, killDeath], (getStat,callback)=>{
+            getStat(stats,savedStats);
+            callback();
+        })
+        // accuracy(stats, savedStats);
+        // headShots(stats, savedStats);
+        // winRate(stats, savedStats);
+        // killDeath(stats,savedStats)
         return resolve(savedStats);
         //TODO(Developer) Please find a better way to do this
     })
