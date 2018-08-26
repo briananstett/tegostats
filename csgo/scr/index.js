@@ -11,12 +11,21 @@ const queue = kue.createQueue();
 const rp = require('request-promise');
 const fs = require('fs');
 const async = require('async');
+const admin = require('firebase-admin');
 
 //Configuration
-const configuration = require('./config.json');
+const configuration = require('../config/config.json');
+const serviceAccount = require('../config/tegoesports-firebase-adminsdk-7vcjc-f7fe6375b6.json');
 const gameID = configuration.gameID;
 const apiKey = configuration.steamKey;
 const concurrency = configuration.concurrency;
+
+//Initialize Firebase
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+var db = admin.firestore();
+db.settings({timestampsInSnapshots: true});
 
 //support functions
 /**
@@ -33,10 +42,6 @@ function parser(rawStats){
             getStat(stats,savedStats);
             callback();
         })
-        // accuracy(stats, savedStats);
-        // headShots(stats, savedStats);
-        // winRate(stats, savedStats);
-        // killDeath(stats,savedStats)
         return resolve(savedStats);
         //TODO(Developer) Please find a better way to do this
     })
@@ -54,7 +59,7 @@ function accuracy(stats, save){
 
     let accuracy = ((shotsHit / shotsFired)* 100).toPrecision(3);
     
-    save.accuracyPercent = accuracy;
+    save.accuracyPercent = Number(accuracy);
 }
 
 /**
@@ -68,7 +73,7 @@ function headShots(stats, save){
 
     let headshotPercent =((headshots/shotshit) * 100).toPrecision(3);
     
-    save.headshotPercent = headshotPercent;
+    save.headshotPercent = Number(headshotPercent);
 }
 
 /**
@@ -82,7 +87,7 @@ function winRate(stats, save){
     let totalRounds = stats.total_rounds_played.value;
 
     let winRate = ((wins/totalRounds) * 100).toPrecision(3);
-    save.winRate = winRate;
+    save.winRate = Number(winRate);
 }
 
 /**
@@ -96,7 +101,7 @@ function killDeath(stats, save){
     let deaths = stats.total_deaths.value;
 
     let kdRatio = ((kills/deaths)).toPrecision(2);
-    save.kdRatio = kdRatio;
+    save.kdRatio = Number(kdRatio);
 }
 
 /**
@@ -110,7 +115,7 @@ function misStats(stats, save){
     let bombDefused = stats.total_defused_bombs.value;
     let timePlayed = Math.floor(stats.total_time_played.value /3600);
     let averageDMG = Math.floor(stats.total_damage_done.value/stats.total_rounds_played.value);
-    let pistolWin = ((stats.total_wins_pistolround.value/(stats.total_matches_played.value * 2))*100).toPrecision(3);
+    let pistolWin = Number(((stats.total_wins_pistolround.value/(stats.total_matches_played.value * 2))*100).toPrecision(3));
 
     save.bombPlanted = bombPlanted;
     save.bombDefused = bombDefused;
@@ -123,9 +128,10 @@ function misStats(stats, save){
 
 
 queue.process('csgo', concurrency, function(message, done){
-    let steamID = message.data.steamID;
-    let userID = message.data.userID;
-    let requestURI = `http://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0001/?appid=${gameID}&key=${apiKey}&steamid=${steamID}`;
+    console.log("Processing")
+    let steamID = message.data.steam_id;
+    let userID = message.data.user_id;
+    let requestURI = `http://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0001/?appid=${gameID}&key=${apiKey}&stemid=${steamID}`;
     rp({
         uri: requestURI
     }).then((csgoStats=>{
@@ -134,7 +140,13 @@ queue.process('csgo', concurrency, function(message, done){
             .then(savedStates=>{
                 //update cloud store
                 console.log(savedStates);
-                done();
+                db.collection('csgo').doc(userID).set(savedStates)
+                    .then(success=>{
+                        done();    
+                    })
+                    .catch(error=>{
+                        done(error)
+                    })
             }).catch(error=>{
                 console.log(error);
                 done(error);
@@ -145,6 +157,7 @@ queue.process('csgo', concurrency, function(message, done){
         let requestError = new Error("Bad Request")
             requestError.URI = requestURI;
             requestError.userID = userID;
+        //update health of this request (healthy, unhealthy, error)
         done(requestError);
     });
     
