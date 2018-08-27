@@ -100,7 +100,7 @@ function killDeath(stats, save){
     let kills = stats.total_kills.value;
     let deaths = stats.total_deaths.value;
 
-    let kdRatio = ((kills/deaths)).toPrecision(2);
+    let kdRatio = ((kills/deaths)).toPrecision(3);
     save.kdRatio = Number(kdRatio);
 }
 
@@ -116,26 +116,28 @@ function misStats(stats, save){
     let timePlayed = Math.floor(stats.total_time_played.value /3600);
     let averageDMG = Math.floor(stats.total_damage_done.value/stats.total_rounds_played.value);
     let pistolWin = Number(((stats.total_wins_pistolround.value/(stats.total_matches_played.value * 2))*100).toPrecision(3));
+    let knifeKills = stats.total_kills_knife.value;
 
     save.bombPlanted = bombPlanted;
     save.bombDefused = bombDefused;
     save.timePlayed = timePlayed;
     save.averageDMGHP = averageDMG;
     save.pistolWin = pistolWin;
+    save.knifeKills = knifeKills;
 
 
 }
 
-
+console.log("Counter Strike Stats Worker");
 queue.process('csgo', concurrency, function(message, done){
-    console.log("Processing")
     let steamID = message.data.steam_id;
     let userID = message.data.user_id;
-    let requestURI = `http://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0001/?appid=${gameID}&key=${apiKey}&stemid=${steamID}`;
+    let requestURI = `http://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0001/?appid=${gameID}&key=${apiKey}&steamid=${steamID}`;
     rp({
         uri: requestURI
     }).then((csgoStats=>{
         // let fs = require('fs');
+        // fs.writeFileSync(csgoStats, 'temp.json');
         parser(csgoStats)
             .then(savedStates=>{
                 //update cloud store
@@ -162,6 +164,20 @@ queue.process('csgo', concurrency, function(message, done){
     });
     
 });
+
+process.once( 'SIGTERM', function ( sig ) {
+    queue.shutdown( 5000, function(err) {
+      console.log( 'Kue shutdown: ', err||'' );
+      process.exit( 0 );
+    });
+  });
+
+  process.once( 'SIGINT', function ( sig ) {
+    queue.shutdown( 5000, function(err) {
+      console.log( 'Kue shutdown: ', err||'' );
+      process.exit( 0 );
+    });
+  });
 
 
 

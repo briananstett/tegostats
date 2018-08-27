@@ -15,6 +15,16 @@ db.settings({timestampsInSnapshots: true});
 csgo = require('./scheduler_modules/csgo');
 
 //Initialize Schedulers
-csgo(db, que, FieldValue);
+csgo.start(db, que, FieldValue);
 
-// kue.app.listen(3000);
+kue.app.listen(3000);
+
+process.once( 'SIGTERM', function ( sig ) {
+    csgo.stop();
+    process.exit(0)
+  });
+
+  process.once( 'SIGINT', function ( sig ) {
+    csgo.stop();
+    process.exit(0)
+  });

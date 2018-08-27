@@ -33,16 +33,20 @@ function addMessage(db, que, FieldValue){
                     }).removeOnComplete(true).save()
 
                     //Message completed successfully
-                    job.on('complate', (result=>{
+                    job.on('complete', (result=>{
                         console.log("success", result);
-                        //update status to ready
+                        documentReference.update({
+                            status: 'ready',
+                            timestamp: FieldValue.serverTimestamp()
+                        })
                     }))
                     //Message failed all attempts
                     .on('failed', errorMessage=>{
                         console.log("error", errorMessage)
                         //Change the task status to unhealthy
                         documentReference.update({
-                            health: 'unhealthy'
+                            health: 'unhealthy',
+                            status: 'ready'
                         })
                     })
                 }
@@ -52,8 +56,16 @@ function addMessage(db, que, FieldValue){
             })   
 }
 
-
-module.exports = function (db,que, FieldValue){
+//Global interval
+var scheduleInterval;
+module.exports.start = function (db,que, FieldValue){
     //Steam API supports 100,000 requests a day ~ 1.157 RPS
-    setInterval(addMessage,1157, db, que, FieldValue);
+    console.log("CSGO Schedule Interval has Started");
+    scheduleInterval = setInterval(addMessage,1157, db, que, FieldValue);
+}
+
+module.exports.stop = function(){
+    clearInterval(scheduleInterval);
+    console.log("CSGO Schedule Interval has Stopped");
+    return true;
 }
