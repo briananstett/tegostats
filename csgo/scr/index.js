@@ -117,6 +117,7 @@ function misStats(stats, save){
     let averageDMG = Math.floor(stats.total_damage_done.value/stats.total_rounds_played.value);
     let pistolWin = Number(((stats.total_wins_pistolround.value/(stats.total_matches_played.value * 2))*100).toPrecision(3));
     let knifeKills = stats.total_kills_knife.value;
+    let zeusKills = stats.total_kills_tazer.value;
 
     save.bombPlanted = bombPlanted;
     save.bombDefused = bombDefused;
@@ -124,6 +125,7 @@ function misStats(stats, save){
     save.averageDMGHP = averageDMG;
     save.pistolWin = pistolWin;
     save.knifeKills = knifeKills;
+    save.zeusKills = zeusKills;
 
 
 }
