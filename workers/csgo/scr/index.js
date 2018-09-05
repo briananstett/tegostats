@@ -9,7 +9,6 @@
 
 const kue = require('kue');
 const rp = require('request-promise');
-const fs = require('fs');
 const async = require('async');
 const admin = require('firebase-admin');
 
@@ -29,6 +28,7 @@ admin.initializeApp({
 const db = admin.firestore();
 db.settings({ timestampsInSnapshots: true });
 
+// Functions
 /**
  * Shot accuracy
  * @param {object} stats JSON object of raw stats.
@@ -107,7 +107,9 @@ function misStats(stats, save) {
   );
 
   const knifeKills = stats.total_kills_knife.value;
-  const zeusKills = stats.total_kills_tazer.value;
+  const zeusKills = stats.total_kills_taser.value;
+  const totalMoney = stats.total_money_earned.value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+  const mvp = stats.total_mvps.value;
 
   saveObject.bombPlanted = bombPlanted;
   saveObject.bombDefused = bombDefused;
@@ -116,8 +118,41 @@ function misStats(stats, save) {
   saveObject.pistolWin = pistolWin;
   saveObject.knifeKills = knifeKills;
   saveObject.zeusKills = zeusKills;
+  saveObject.totalMoney = totalMoney;
+  saveObject.mvp = mvp;
 }
 
+/**
+ * @function gunStats
+ * @param {object} stats JSON object of raw stats.
+ * @param {object} save JSON object to push save status
+ * @description retrieves mis. run stats
+ */
+function gunStats(stats, save) {
+  const saveObject = save;
+  const farmerBrown = stats.total_kills_sawedoff.value;
+  const brownAccuracy = (
+    (stats.total_hits_sawedoff.value / stats.total_shots_sawedoff.value) *
+    100
+  ).toPrecision(3);
+  const deagle = stats.total_kills_deagle.value;
+  const deagleAccuracy = (
+    (stats.total_hits_deagle.value / stats.total_shots_deagle.value) *
+    100
+  ).toPrecision(3);
+  const awpKills = stats.total_kills_awp.value;
+  const awpAccuracy = (
+    (stats.total_hits_awp.value / stats.total_shots_awp.value) *
+    100
+  ).toPrecision(3);
+
+  saveObject.farmerBrown = farmerBrown;
+  saveObject.brownAccuracy = brownAccuracy;
+  saveObject.deagleKills = deagle;
+  saveObject.deagleAccuracy = deagleAccuracy;
+  saveObject.awpKills = awpKills;
+  saveObject.awpAccuracy = awpAccuracy;
+}
 // support functions
 /**
  * Head function that handles all parsing of stat data
@@ -129,19 +164,23 @@ function parser(rawStats) {
     const savedStats = {};
     const { stats } = JSON.parse(rawStats).playerstats;
 
-    async.each([accuracy, headShots, winRate, killDeath, misStats], (getStat, callback) => {
-      getStat(stats, savedStats);
-      callback(err => {
-        if (err) {
-          reject(err);
-        }
-      });
-    });
+    async.each(
+      [accuracy, headShots, winRate, killDeath, misStats, gunStats],
+      (getStat, callback) => {
+        getStat(stats, savedStats);
+        callback(err => {
+          if (err) {
+            reject(err);
+          }
+        });
+      }
+    );
     return resolve(savedStats);
     // TODO(Developer) Please find a better way to do this
   });
 }
 
+// Processor
 console.log('Counter Strike Stats Worker');
 queue.process('csgo', concurrency, (message, done) => {
   const steamID = message.data.steam_id;

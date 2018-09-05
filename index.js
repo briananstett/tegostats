@@ -23,11 +23,13 @@ csgo.start(db, que, FieldValue);
 kue.app.listen(3000);
 
 process.once('SIGTERM', () => {
+  console.log('Stopping...');
   csgo.stop();
   process.exit(0);
 });
 
 process.once('SIGINT', () => {
+  console.log('Stopping...');
   csgo.stop();
   process.exit(0);
 });
