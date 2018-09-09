@@ -35,7 +35,8 @@ function addMessage(db, que, FieldValue) {
         const job = que
           .create('csgo', {
             steam_id: scheduleTaskData.steam_id,
-            user_id: scheduleTaskData.user_id
+            user_id: scheduleTaskData.user.id,
+            userReference: scheduleTaskData.user
           })
           .removeOnComplete(true)
           .save();
@@ -72,8 +73,15 @@ module.exports.start = (db, que, FieldValue) => {
   scheduleInterval = setInterval(addMessage, 1157, db, que, FieldValue);
 };
 
-module.exports.stop = () => {
-  clearInterval(scheduleInterval);
+module.exports.stop = que => {
   console.log('CSGO Schedule Interval has Stopped');
-  return true;
+  clearInterval(scheduleInterval);
+  console.log('here');
+  que.activeCount((error, total) => {
+    console.log('here two');
+    console.log(error);
+    console.log(total);
+    if (total) console.log(`There are still ${total} active jobs`);
+    else return true;
+  });
 };

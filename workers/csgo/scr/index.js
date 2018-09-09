@@ -55,6 +55,7 @@ function headShots(stats, save) {
   const headshotPercent = ((headshots / shotshit) * 100).toPrecision(3);
 
   saveObject.headshotPercent = Number(headshotPercent);
+  saveObject.headshots = headshots;
 }
 
 /**
@@ -70,6 +71,8 @@ function winRate(stats, save) {
   const winRateValue = ((wins / totalRounds) * 100).toPrecision(3);
 
   saveObject.winRate = Number(winRateValue);
+  saveObject.totalRounds = totalRounds;
+  saveObject.totalRoundsWon = wins;
 }
 
 /**
@@ -80,11 +83,21 @@ function winRate(stats, save) {
  */
 function killDeath(stats, save) {
   const saveObject = save;
+  console.log(stats.total_kills);
   const kills = stats.total_kills.value;
   const deaths = stats.total_deaths.value;
   const kdRatio = (kills / deaths).toPrecision(3);
 
   saveObject.kdRatio = Number(kdRatio);
+}
+
+/**
+ * @function timeStemp
+ * @param {object} save JSON object to pusha saved status
+ */
+function timestamp(save) {
+  const saveObject = save;
+  saveObject.timestamp = Date.now();
 }
 
 /**
@@ -98,7 +111,7 @@ function misStats(stats, save) {
   const bombPlanted = stats.total_planted_bombs.value;
   const bombDefused = stats.total_defused_bombs.value;
   const timePlayed = Math.floor(stats.total_time_played.value / 3600);
-  const averageDMG = Math.floor(stats.total_damage_done.value / stats.total_rounds_played.value);
+  const ADR = Math.floor(stats.total_damage_done.value / stats.total_rounds_played.value);
   const pistolWin = Number(
     (
       (stats.total_wins_pistolround.value / (stats.total_matches_played.value * 2)) *
@@ -110,16 +123,28 @@ function misStats(stats, save) {
   const zeusKills = stats.total_kills_taser.value;
   const totalMoney = stats.total_money_earned.value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
   const mvp = stats.total_mvps.value;
+  const totalKills = stats.total_kills.value;
+  const totalDeaths = stats.total_deaths.value;
+  const totalDamage = stats.total_damage_done.value;
+  const totalMatches = stats.total_matches_played.value;
+  const totalMatchesWon = stats.total_matches_won.value;
+  const weaponsGivenToTeam = stats.total_weapons_donated.value;
 
   saveObject.bombPlanted = bombPlanted;
   saveObject.bombDefused = bombDefused;
   saveObject.timePlayed = timePlayed;
-  saveObject.averageDMGHP = averageDMG;
+  saveObject.ADR = ADR;
   saveObject.pistolWin = pistolWin;
   saveObject.knifeKills = knifeKills;
   saveObject.zeusKills = zeusKills;
   saveObject.totalMoney = totalMoney;
   saveObject.mvp = mvp;
+  saveObject.totalKills = totalKills;
+  saveObject.totalDeaths = totalDeaths;
+  saveObject.totalDamage = totalDamage;
+  saveObject.totalMatches = totalMatches;
+  saveObject.totalMatchesWon = totalMatchesWon;
+  saveObject.totalWeaponsGiven = weaponsGivenToTeam;
 }
 
 /**
@@ -153,6 +178,16 @@ function gunStats(stats, save) {
   saveObject.awpKills = awpKills;
   saveObject.awpAccuracy = awpAccuracy;
 }
+
+function historicKDR(rawStats) {
+  const { stats } = JSON.parse(rawStats).playerstats;
+  console.log(stats.total_kills);
+  const kills = stats.total_kills.value;
+  const deaths = stats.total_deaths.value;
+  const kdRatio = (kills / deaths).toPrecision(3);
+
+  return kdRatio;
+}
 // support functions
 /**
  * Head function that handles all parsing of stat data
@@ -165,7 +200,7 @@ function parser(rawStats) {
     const { stats } = JSON.parse(rawStats).playerstats;
 
     async.each(
-      [accuracy, headShots, winRate, killDeath, misStats, gunStats],
+      [accuracy, headShots, winRate, killDeath, misStats, gunStats, timestamp],
       (getStat, callback) => {
         getStat(stats, savedStats);
         callback(err => {
@@ -185,30 +220,35 @@ console.log('Counter Strike Stats Worker');
 queue.process('csgo', concurrency, (message, done) => {
   const steamID = message.data.steam_id;
   const userID = message.data.user_id;
+  const { userReference } = message.data;
+  console.log(steamID, userID);
   const requestURI = `http://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0001/?appid=${gameID}&key=${apiKey}&steamid=${steamID}`;
   rp({
     uri: requestURI
   })
-    .then(csgoStats => {
+    .then(async csgoStats => {
       // let fs = require('fs');
       // fs.writeFileSync(csgoStats, 'temp.json');
-      parser(csgoStats)
-        .then(savedStates => {
-          // update cloud store
-          db.collection('csgo')
-            .doc(userID)
-            .set(savedStates)
-            .then(() => {
-              done();
-            })
-            .catch(error => {
-              done(error);
-            });
-        })
-        .catch(error => {
-          console.log(error);
-          done(error);
-        });
+      try {
+        // TODO (DEVELOPER) Promise all, get user limits and parser stats
+        const kdr = historicKDR(csgoStats);
+        const saveStats = await parser(csgoStats);
+        await db
+          .collection('csgo')
+          .doc(userID)
+          .set(saveStats);
+        db.collection('csgo')
+          .doc(userID)
+          .collection('historicKDR')
+          .add({
+            kdr,
+            timestamp: Date.now()
+          });
+        done();
+      } catch (error) {
+        console.log(error);
+        done(error);
+      }
     })
     .catch(error => {
       // Request failed

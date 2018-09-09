@@ -23,13 +23,19 @@ csgo.start(db, que, FieldValue);
 kue.app.listen(3000);
 
 process.once('SIGTERM', () => {
+  // TODO (DEVELOPER) Need to wait for the jobs to finish to stop stale jobs
   console.log('Stopping...');
-  csgo.stop();
+  console.log(csgo.stop(que));
   process.exit(0);
 });
 
 process.once('SIGINT', () => {
+  que.activeCount((error, total) => {
+    console.log('IN HERE');
+    console.log(total);
+    console.log(error);
+  });
   console.log('Stopping...');
-  csgo.stop();
+  console.log(csgo.stop(que));
   process.exit(0);
 });
